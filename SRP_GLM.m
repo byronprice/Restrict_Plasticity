@@ -29,7 +29,7 @@ end
 
 timeStamps = 1/sampleFreq:1/sampleFreq:(dataLength/sampleFreq);
 
-if Day<4
+if strcmp(DayType,'train') == 1
     numStimuli = 200;
     eventTimes = tsevs{33};
     eventTimes = eventTimes(svStrobed==1 | svStrobed==2);
@@ -80,7 +80,54 @@ if Day<4
     [result,classicVEPs] = GetTraining(ChanData,numARParams,numStimParams,...
         stimBasisFuns,timeIndex,numChans,numStimuli,blockBasisFuns,blockMax,...
         basisInds,blockIndex);
-elseif Day==4
+elseif strcmp(DayType,'test') == 1
+    numStimuli = 200;
+    eventTimes = tsevs{33};
+    eventTimes = eventTimes(svStrobed==1 | svStrobed==2);
+    timeIndex = zeros(numStimuli,2);
+    blockIndex = ones(numStimuli,2);
+    
+    currentBlock = 1;
+    currentBlockIndex = 1;
+    for ii=1:numStimuli
+        [~,timeIndex(ii,1)] = min(abs(eventTimes(ii)-timeStamps));
+        timeIndex(ii,2) = 1;
+        if ii>1
+            difference = timeIndex(ii,1)-timeIndex(ii-1,1);
+            if difference>sampleFreq
+                currentBlock = currentBlock+1;
+                currentBlockIndex = 1;
+            end
+        end
+        blockIndex(ii,1) = currentBlock; % 1 to 4 (which block of stimuli)
+        blockIndex(ii,2) = currentBlockIndex; % 1 to 50, which presentation within block
+        currentBlockIndex = currentBlockIndex+1;
+    end
+    numARParams = 20;numStimParams = 250;numStimBases = 10;
+    
+    stimBasisFuns = zeros(numStimParams,numStimBases);
+    stdev = (numStimParams/numStimBases)/2;
+    centerPoints = linspace(0,numStimParams,numStimBases);
+    for ii=1:numStimBases
+        temp = exp(-(linspace(0,numStimParams-1,numStimParams)-centerPoints(ii)).^2./(2*stdev*stdev));
+        stimBasisFuns(:,ii) = temp;
+    end
+    
+    numBlockBases = 6;blockMax = max(blockIndex(:,2));
+    blockBasisFuns = zeros(blockMax,numBlockBases);
+    stdev = (blockMax/numBlockBases)/2;
+    centerPoints = linspace(0,blockMax,numBlockBases);
+    for ii=1:numBlockBases
+        temp = exp(-(linspace(0,blockMax-1,blockMax)-centerPoints(ii)).^2./(2*stdev*stdev));
+        blockBasisFuns(:,ii) = temp;
+    end
+    
+    basisInds = cell(4,1);
+    basisInds{1} = 1:numARParams;
+    basisInds{2} = max(basisInds{1})+1:max(basisInds{1})+1+numStimBases-1;
+    basisInds{3} = max(basisInds{2})+1:max(basisInds{2})+1+numBlockBases-1;
+    basisInds{4} = max(basisInds{3})+1;
+    
     [result,classicVEPs] = GetTesting(ChanData,numARParams,numStimParams,...
         stimBasisFuns,timeIndex,numChans,numStimuli,blockBasisFuns,blockMax,...
         basisInds,blockIndex);
