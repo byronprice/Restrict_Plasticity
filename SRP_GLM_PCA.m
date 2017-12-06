@@ -57,9 +57,13 @@ for ii=1:qStim
    Wstim(:,ii) = Wstim(:,ii)./norm(Wstim(:,ii)); 
 end
 
+% qStim = 6;  ... do we need PCs that have an effect before 50ms latency to
+%                   V1??
+% Wstim = Wstim(:,1:qStim);
+
 files = dir('RestrictSRPReduce-Day4*.mat');
 
-numConditions = 4;numParams = 24;
+numConditions = 4;numParams = qStim+1+qHist;
 data_Target = zeros(numConditions,17,numParams);
 data_Off = zeros(numConditions,17,numParams);
 
