@@ -49,6 +49,13 @@
 % end
 
 load('RestrictSRP-FinalPCA.mat','Whist','qHist','Wstim','qStim');
+for ii=1:qHist
+    Whist(:,ii) = Whist(:,ii)./norm(Whist(:,ii));
+end
+
+for ii=1:qStim
+   Wstim(:,ii) = Wstim(:,ii)./norm(Wstim(:,ii)); 
+end
 
 files = dir('RestrictSRPReduce-Day4*.mat');
 
