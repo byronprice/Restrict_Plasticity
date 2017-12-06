@@ -1,10 +1,11 @@
 function [] = SRP_GLM(AnimalName,Day)
 % SRP_GLM.m
+%  2017/12/04
 filename = sprintf('RestrictSRPDataDay%d_%d.mat',Day,AnimalName);
 load(filename);
 
 stimFile = sprintf('RestrictSRPStimDay%d_%d.mat',Day,AnimalName);
-load(stimFile,'DayType','DistToScreen','targetChan','Radius');
+load(stimFile,'DayType','DistToScreen','targetChan','Radius','numStimuli');
 
 numChans = 2;
 sampleFreq = adfreq;
@@ -30,7 +31,7 @@ end
 timeStamps = 1/sampleFreq:1/sampleFreq:(dataLength/sampleFreq);
 
 if strcmp(DayType,'train') == 1
-    numStimuli = 200;
+
     eventTimes = tsevs{33};
     eventTimes = eventTimes(svStrobed==1 | svStrobed==2);
     timeIndex = zeros(numStimuli,2);
@@ -52,7 +53,7 @@ if strcmp(DayType,'train') == 1
         blockIndex(ii,2) = currentBlockIndex; % 1 to 50, which presentation within block
         currentBlockIndex = currentBlockIndex+1;
     end
-    numARParams = 20;numStimParams = 250;numStimBases = 10;
+    numARParams = 10;numStimParams = 250;numStimBases = 25;
     
     stimBasisFuns = zeros(numStimParams,numStimBases);
     stdev = (numStimParams/numStimBases)/2;
@@ -62,48 +63,63 @@ if strcmp(DayType,'train') == 1
         stimBasisFuns(:,ii) = temp;
     end
     
-    numBlockBases = 6;blockMax = max(blockIndex(:,2));
-    blockBasisFuns = zeros(blockMax,numBlockBases);
-    stdev = (blockMax/numBlockBases)/2;
-    centerPoints = linspace(0,blockMax,numBlockBases);
-    for ii=1:numBlockBases
-        temp = exp(-(linspace(0,blockMax-1,blockMax)-centerPoints(ii)).^2./(2*stdev*stdev));
-        blockBasisFuns(:,ii) = temp;
-    end
+%     numBlockBases = 4;blockMax = 50;
+%     numBlockBases = 5;blockMax = max(blockIndex(:,2));
+%     blockBasisFuns = zeros(blockMax,numBlockBases);
+%     stdev = (blockMax/numBlockBases)/2;
+%     centerPoints = linspace(0,blockMax,numBlockBases);
+%     for ii=1:numBlockBases
+%         temp = exp(-(linspace(0,blockMax-1,blockMax)-centerPoints(ii)).^2./(2*stdev*stdev));
+%         blockBasisFuns(:,ii) = temp;
+%     end
+%     count = 1;stepper = floor(blockMax/numBlockBases);
+%     for ii=1:numBlockBases
+%         temp = zeros(blockMax,1);
+%         temp(count:count+stepper-1) = 1;
+%         blockBasisFuns(:,ii) = temp;
+%         count = count+stepper;
+%     end
     
-    basisInds = cell(4,1);
+    basisInds = cell(2,1);
     basisInds{1} = 1:numARParams;
     basisInds{2} = max(basisInds{1})+1:max(basisInds{1})+1+numStimBases-1;
-    basisInds{3} = max(basisInds{2})+1:max(basisInds{2})+1+numBlockBases-1;
-    basisInds{4} = max(basisInds{3})+1;
+%     basisInds{3} = max(basisInds{2})+1:max(basisInds{2})+1+numBlockBases-1;
     
     [result,classicVEPs] = GetTraining(ChanData,numARParams,numStimParams,...
-        stimBasisFuns,timeIndex,numChans,numStimuli,blockBasisFuns,blockMax,...
-        basisInds,blockIndex);
-elseif strcmp(DayType,'test') == 1
-    numStimuli = 200;
-    eventTimes = tsevs{33};
-    eventTimes = eventTimes(svStrobed==1 | svStrobed==2);
-    timeIndex = zeros(numStimuli,2);
-    blockIndex = ones(numStimuli,2);
+        stimBasisFuns,timeIndex,numChans,numStimuli,basisInds);
     
-    currentBlock = 1;
-    currentBlockIndex = 1;
-    for ii=1:numStimuli
-        [~,timeIndex(ii,1)] = min(abs(eventTimes(ii)-timeStamps));
-        timeIndex(ii,2) = 1;
-        if ii>1
-            difference = timeIndex(ii,1)-timeIndex(ii-1,1);
-            if difference>sampleFreq
-                currentBlock = currentBlock+1;
-                currentBlockIndex = 1;
+elseif strcmp(DayType,'test') == 1
+    
+    eventTimes = tsevs{33};
+    eventTimes1 = eventTimes(svStrobed==1 | svStrobed==2);
+    eventTimes2 = eventTimes(svStrobed==3 | svStrobed==4);
+    eventTimes3 = eventTimes(svStrobed==5 | svStrobed==6);
+    eventTimes4 = eventTimes(svStrobed==7 | svStrobed==8);
+    
+    eventTimes = [eventTimes1(:),eventTimes2(:),eventTimes3(:),eventTimes4(:)];
+    
+    timeIndex = zeros(4,numStimuli,2);
+    blockIndex = ones(4,numStimuli,2);
+    
+    for jj=1:4
+        currentBlock = 1;
+        currentBlockIndex = 1;
+        for ii=1:numStimuli
+            [~,timeIndex(jj,ii,1)] = min(abs(eventTimes(ii,jj)-timeStamps));
+            timeIndex(jj,ii,2) = 1;
+            if ii>1
+                difference = timeIndex(jj,ii,1)-timeIndex(jj,ii-1,1);
+                if difference>sampleFreq
+                    currentBlock = currentBlock+1;
+                    currentBlockIndex = 1;
+                end
             end
+            blockIndex(jj,ii,1) = currentBlock; % 1 to 4 (which block of stimuli)
+            blockIndex(jj,ii,2) = currentBlockIndex; % 1 to 50, which presentation within block
+            currentBlockIndex = currentBlockIndex+1;
         end
-        blockIndex(ii,1) = currentBlock; % 1 to 4 (which block of stimuli)
-        blockIndex(ii,2) = currentBlockIndex; % 1 to 50, which presentation within block
-        currentBlockIndex = currentBlockIndex+1;
     end
-    numARParams = 20;numStimParams = 250;numStimBases = 10;
+    numARParams = 10;numStimParams = 250;numStimBases = 25;
     
     stimBasisFuns = zeros(numStimParams,numStimBases);
     stdev = (numStimParams/numStimBases)/2;
@@ -113,71 +129,82 @@ elseif strcmp(DayType,'test') == 1
         stimBasisFuns(:,ii) = temp;
     end
     
-    numBlockBases = 6;blockMax = max(blockIndex(:,2));
-    blockBasisFuns = zeros(blockMax,numBlockBases);
-    stdev = (blockMax/numBlockBases)/2;
-    centerPoints = linspace(0,blockMax,numBlockBases);
-    for ii=1:numBlockBases
-        temp = exp(-(linspace(0,blockMax-1,blockMax)-centerPoints(ii)).^2./(2*stdev*stdev));
-        blockBasisFuns(:,ii) = temp;
-    end
+%     numBlockBases = 6;blockMax = max(squeeze(blockIndex(1,:,2)));
+%     blockBasisFuns = zeros(blockMax,numBlockBases);
+%     stdev = (blockMax/numBlockBases)/2;
+%     centerPoints = linspace(0,blockMax,numBlockBases);
+%     for ii=1:numBlockBases
+%         temp = exp(-(linspace(0,blockMax-1,blockMax)-centerPoints(ii)).^2./(2*stdev*stdev));
+%         blockBasisFuns(:,ii) = temp;
+%     end
     
-    basisInds = cell(4,1);
+    basisInds = cell(5,1);
     basisInds{1} = 1:numARParams;
+    
     basisInds{2} = max(basisInds{1})+1:max(basisInds{1})+1+numStimBases-1;
-    basisInds{3} = max(basisInds{2})+1:max(basisInds{2})+1+numBlockBases-1;
-    basisInds{4} = max(basisInds{3})+1;
+    basisInds{3} = max(basisInds{2})+1:max(basisInds{2})+1+numStimBases-1;
+    basisInds{4} = max(basisInds{3})+1:max(basisInds{3})+1+numStimBases-1;
+    basisInds{5} = max(basisInds{4})+1:max(basisInds{4})+1+numStimBases-1;
+    
+%     basisInds{6} = max(basisInds{5})+1:max(basisInds{5})+1+numBlockBases-1;
+%     basisInds{7} = max(basisInds{6})+1:max(basisInds{6})+1+numBlockBases-1;
+%     basisInds{8} = max(basisInds{7})+1:max(basisInds{7})+1+numBlockBases-1;
+%     basisInds{9} = max(basisInds{8})+1:max(basisInds{8})+1+numBlockBases-1;
+%     
+%     basisInds{10} = max(basisInds{9})+1;
+%     basisInds{11} = max(basisInds{10})+1;
+%     basisInds{12} = max(basisInds{11})+1;
+%     basisInds{13} = max(basisInds{12})+1;
     
     [result,classicVEPs] = GetTesting(ChanData,numARParams,numStimParams,...
-        stimBasisFuns,timeIndex,numChans,numStimuli,blockBasisFuns,blockMax,...
-        basisInds,blockIndex);
+        stimBasisFuns,timeIndex,numChans,numStimuli,basisInds);
 end
 % figure();plot(classicVEP(:,1),'LineWidth',2);hold on;
 % plot(classicVEP(:,2),'LineWidth',2);
 % legend('LH','RH');
+
 filename = sprintf('RestrictSRPResults-Day%d_%d.mat',Day,AnimalName);
-save(filename,'result','classicVEPs','stimBasisFuns','blockBasisFuns',...
+save(filename,'result','classicVEPs','stimBasisFuns',...
     'timeIndex','blockIndex','basisInds','DayType','DistToScreen','targetChan',...
-    'Radius');
+    'Radius','numStimuli');
 end
 
 function [result,classicVEP] = GetTraining(ChanData,numARParams,numStimParams,...
-    stimBasisFuns,timeIndex,numChans,numStimuli,blockBasisFuns,blockMax,basisInds,blockIndex)
+    stimBasisFuns,timeIndex,numChans,numStimuli,basisInds)
     timeIndex(:,1) = timeIndex(:,1)-numARParams;
-    result = struct('b',cell(numChans,5),'dev',zeros(numChans,5),...
-        'se',cell(numChans,5),'Fstat',cell(numChans,5),'Fpval',cell(numChans,5));
+    result = struct('b',cell(numChans,3),'dev',zeros(numChans,3),...
+        'se',cell(numChans,3),'Fstat',cell(numChans,3),'Fpval',cell(numChans,3));
     numStimBases = size(stimBasisFuns,2);
-    numBlockBases = size(blockBasisFuns,2);
+    N = numStimuli*numStimParams+numARParams;
     for ii=1:numChans
         y = ChanData(numARParams+1:end,ii);
-        N = length(y);
-        totParams = numARParams+numStimBases+numBlockBases+1;
+        totParams = numARParams+numStimBases;
         design = zeros(length(y),totParams);
         count = 1;
         for jj=numARParams:-1:1
             design(:,count) = ChanData(jj:end-count,ii);
             count = count+1;
         end
+        
         stimBasisDesign = zeros(length(y),numStimParams);
-        blockNum = zeros(length(y),1);
-        blockBasisDesign = zeros(length(y),blockMax);
+        % blockNum = zeros(length(y),1);
+%         blockBasisDesign = zeros(length(y),numBlockBases);
         for kk=1:numStimuli
             for jj=1:numStimParams
                 stimBasisDesign(timeIndex(kk,1)+jj,jj) = 1;
-                blockNum(timeIndex(kk,1)+jj) = blockIndex(kk,1);
-                blockBasisDesign(timeIndex(kk,1)+jj,blockIndex(kk,2)) = 1;
+                %blockNum(timeIndex(kk,1)+jj) = blockIndex(kk,1);
+%                 blockBasisDesign(timeIndex(kk,1)+jj,blockIndex(kk,1)) = 1;
             end
         end
         
         design(:,basisInds{2}) = stimBasisDesign*stimBasisFuns;
-        design(:,basisInds{3}) = blockBasisDesign*blockBasisFuns;
-        design(:,basisInds{4}) = blockNum;
+%         design(:,basisInds{3}) = blockBasisDesign;
+        %design(:,basisInds{4}) = blockNum;
         [b,dev,stats] = glmfit(design,y,'normal');
 
         result(ii,1).b = b;
         result(ii,1).dev = dev;
         result(ii,1).se = stats.se;
-        
         
         allInds = 1:totParams;
         [~,indsToExclude,~] = intersect(allInds,basisInds{1});
@@ -185,62 +212,119 @@ function [result,classicVEP] = GetTraining(ChanData,numARParams,numStimParams,..
         newInds(indsToExclude) = [];
         [b,dev,stats] = glmfit(design(:,newInds),y,'normal');
         
-        F = ((dev-result(ii,1).dev)/(length(indsToExclude)))/(result(ii,1).dev/(N-totParams-1));
+        F = ((dev-result(ii,1).dev)/(length(indsToExclude)))/(result(ii,1).dev/(length(y)-totParams-2));
         result(ii,2).b = b;
         result(ii,2).dev = dev;
         result(ii,2).se = stats.se;
         result(ii,2).Fstat = F;
-        result(ii,2).Fpval = fcdf(F,length(indsToExclude),N-totParams,'upper');
+        result(ii,2).Fpval = fcdf(F,length(indsToExclude),length(y)-(totParams+1),'upper');
         
-        
-        [~,indsToExclude,~] = intersect(allInds,basisInds{2});
-        newInds = allInds;
-        newInds(indsToExclude) = [];
-        [b,dev,stats] = glmfit(design(:,newInds),y,'normal');
-        
-        F = ((dev-result(ii,1).dev)/(length(indsToExclude)))/(result(ii,1).dev/(N-totParams-1));
-        result(ii,3).b = b;
-        result(ii,3).dev = dev;
-        result(ii,3).se = stats.se;
-        result(ii,3).Fstat = F;
-        result(ii,3).Fpval = fcdf(F,length(indsToExclude),N-totParams,'upper');
-        
-        
-        [~,indsToExclude,~] = intersect(allInds,basisInds{3});
-        newInds = allInds;
-        newInds(indsToExclude) = [];
-        [b,dev,stats] = glmfit(design(:,newInds),y,'normal');
-        
-        F = ((dev-result(ii,1).dev)/(length(indsToExclude)))/(result(ii,1).dev/(N-totParams-1));
-        result(ii,4).b = b;
-        result(ii,4).dev = dev;
-        result(ii,4).se = stats.se;
-        result(ii,4).Fstat = F;
-        result(ii,4).Fpval = fcdf(F,length(indsToExclude),N-totParams,'upper');
-        
-        
-        [~,indsToExclude,~] = intersect(allInds,basisInds{4});
-        newInds = allInds;
-        newInds(indsToExclude) = [];
-        [b,dev,stats] = glmfit(design(:,newInds),y,'normal');
-        
-        F = ((dev-result(ii,1).dev)/(length(indsToExclude)))/(result(ii,1).dev/(N-totParams-1));
-        result(ii,5).b = b;
-        result(ii,5).dev = dev;
-        result(ii,5).se = stats.se;
-        result(ii,5).Fstat = F;
-        result(ii,5).Fpval = fcdf(F,length(indsToExclude),N-totParams,'upper');
+        for jj=2
+            [~,indsToExclude,~] = intersect(allInds,basisInds{jj});
+            newInds = allInds;
+            newInds(indsToExclude) = [];
+            [b,dev,stats] = glmfit(design(:,newInds),y,'normal');
+            
+            F = ((dev-result(ii,1).dev)/(length(indsToExclude)))/(result(ii,1).dev/(N-totParams-2));
+            result(ii,jj+1).b = b;
+            result(ii,jj+1).dev = dev;
+            result(ii,jj+1).se = stats.se;
+            result(ii,jj+1).Fstat = F;
+            result(ii,jj+1).Fpval = fcdf(F,length(indsToExclude),N-(totParams+1),'upper');
+        end
     end
     
     classicVEP = zeros(numStimParams,numChans);
     for jj=1:numChans
         for ii=1:numStimuli
-            classicVEP(:,jj) = classicVEP(:,jj)+ChanData(timeIndex(ii)+numARParams...
-                :timeIndex(ii)+numARParams+numStimParams-1,jj)./numStimuli;
+            classicVEP(:,jj) = classicVEP(:,jj)+ChanData(timeIndex(ii,1)+numARParams...
+                :timeIndex(ii,1)+numARParams+numStimParams-1,jj)./numStimuli;
         end
     end
 
 
+end
+
+
+function [result,classicVEP] = GetTesting(ChanData,numARParams,numStimParams,...
+    stimBasisFuns,timeIndex,numChans,numStimuli,basisInds)
+
+    timeIndex(:,:,1) = timeIndex(:,:,1)-numARParams;
+    result = struct('b',cell(numChans,6),'dev',zeros(numChans,6),...
+        'se',cell(numChans,6),'Fstat',cell(numChans,6),'Fpval',cell(numChans,6));
+    numStimBases = size(stimBasisFuns,2);
+    N = numStimuli*numStimParams+numARParams;
+    for ii=1:numChans
+        y = ChanData(numARParams+1:end,ii);
+        totParams = numARParams+4*numStimBases;
+        design = zeros(length(y),totParams);
+        count = 1;
+        for jj=numARParams:-1:1
+            design(:,count) = ChanData(jj:end-count,ii);
+            count = count+1;
+        end
+        
+        for ll=1:4
+            stimBasisDesign = zeros(length(y),numStimParams);
+%             blockNum = zeros(length(y),1);
+%             blockBasisDesign = zeros(length(y),blockMax);
+            for kk=1:numStimuli
+                for jj=1:numStimParams
+                    stimBasisDesign(timeIndex(ll,kk,1)+jj,jj) = 1;
+%                     blockNum(timeIndex(ll,kk,1)+jj) = blockIndex(ll,kk,1);
+%                     blockBasisDesign(timeIndex(ll,kk,1)+jj,blockIndex(ll,kk,2)) = 1;
+                end
+            end
+            
+            design(:,basisInds{1+ll}) = stimBasisDesign*stimBasisFuns;
+%             design(:,basisInds{5+ll}) = blockBasisDesign*blockBasisFuns;
+%             design(:,basisInds{9+ll}) = blockNum;
+        end
+        
+        [b,dev,stats] = glmfit(design,y,'normal');
+
+        result(ii,1).b = b;
+        result(ii,1).dev = dev;
+        result(ii,1).se = stats.se;
+        
+        allInds = 1:totParams;
+        [~,indsToExclude,~] = intersect(allInds,basisInds{1});
+        newInds = allInds;
+        newInds(indsToExclude) = [];
+        [b,dev,stats] = glmfit(design(:,newInds),y,'normal');
+        
+        F = ((dev-result(ii,1).dev)/(length(indsToExclude)))/(result(ii,1).dev/(length(y)-totParams-2));
+        result(ii,2).b = b;
+        result(ii,2).dev = dev;
+        result(ii,2).se = stats.se;
+        result(ii,2).Fstat = F;
+        result(ii,2).Fpval = fcdf(F,length(indsToExclude),length(y)-(totParams+1),'upper');
+        
+        for jj=2:5
+            [~,indsToExclude,~] = intersect(allInds,basisInds{jj});
+            newInds = allInds;
+            newInds(indsToExclude) = [];
+            [b,dev,stats] = glmfit(design(:,newInds),y,'normal');
+            
+            F = ((dev-result(ii,1).dev)/(length(indsToExclude)))/(result(ii,1).dev/(N-totParams-2));
+            result(ii,jj+1).b = b;
+            result(ii,jj+1).dev = dev;
+            result(ii,jj+1).se = stats.se;
+            result(ii,jj+1).Fstat = F;
+            result(ii,jj+1).Fpval = fcdf(F,length(indsToExclude),N-(totParams+1),'upper');
+        end
+    end
+    
+    classicVEP = cell(4,numChans);
+    for ll=1:4
+        for jj=1:numChans
+            classicVEP{ll,jj} = zeros(numStimParams,1);
+            for ii=1:numStimuli
+                classicVEP{ll,jj} = classicVEP{ll,jj}+ChanData(timeIndex(ll,ii,1)+numARParams...
+                    :timeIndex(ll,ii,1)+numARParams+numStimParams-1,jj)./numStimuli;
+            end
+        end
+    end
 end
 
 % % BAYESIAN APPROACH

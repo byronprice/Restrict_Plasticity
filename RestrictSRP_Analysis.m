@@ -444,8 +444,8 @@ scatterhist(x,y,'Group',group,...
 vepMagMetric = zeros(numAnimals,1);
 for ii=1:numAnimals
    targetChan = targetChannels(ii);
-   %vepMagMetric(ii) = VEPmagAtOtherCenter(ii,-targetChan+3);
-   vepMagMetric(ii) = compactVEPs{ii,1}(-targetChan+3);
+   vepMagMetric(ii) = VEPmagAtOtherCenter(ii,targetChan);
+   %vepMagMetric(ii) = compactVEPs{ii,1}(-targetChan+3);
 end
 figure();scatter(vepMagMetric,...
     trainVsNovelTarget(:,1)./trainVsNovelTarget(:,2),[],'c','LineWidth',2);
@@ -463,9 +463,9 @@ end
 x = 0:0.1:(max(vepMagMetric)+0.1);
 y = ones(length(x),1);
 hold on;plot(x,y,'k','LineWidth',2);
-title('Trained Divided by Novel VEP Magnitude');
+title('Trained Divided by Novel VEP Magnitude (Plasticity Metric)');
 
-xlabel('Day 1 VEP Magnitude at Off-Target Channel');
+xlabel('Relative VEP Magnitude at Off-Target Channel');
 ylabel('VEP Magnitude Ratio [Trained/Novel]');
 
 % QUESTION 7: Maybe the distance betwen the channels is not the best
