@@ -113,6 +113,7 @@ for ii=1:17
             
             F = ((dev2-dev)/qStim)/(dev/(N-totParams-1));
             Fpval = fcdf(F,qStim,N-totParams,'upper');
+            fprintf('F: %3.2e\n',F);
             fprintf('F-test p-value: %3.2e\n',Fpval);
             
             if jj==targetChan
