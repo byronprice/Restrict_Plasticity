@@ -70,17 +70,21 @@ conv_factor = 1/conv_factor;
 % perform unit conversions
 Radius = (tan((degreeRadius/2)*pi/180)*(DistToScreen*10*2))*conv_factor; % get number of pixels
      % that degreeRadius degrees of visual space will occupy
+    
+Shift = (tan((degreeShift/2)*pi/180)*(DistToScreen*10*2))*conv_factor;
      
 temp = (tan(((1/spatFreq)/2)*pi/180)*(DistToScreen*10*2))*conv_factor;
 newSpatFreq = 1/temp;
 
 if Day==1
-    [centerPositions,targetChan] = GetRetinoMap(AnimalName);
+    [centerPositions,~] = GetRetinoMap(AnimalName);
     targetChan = 1;
+    trueCenter = centerPositions;
+    centerPositions(targetChan,2) = centerPositions(targetChan,2)+Shift;
 else
    cd('~/CloudStation/ByronExp/RestrictSRP');
    fileName = sprintf('RestrictSRPStimDay1_%d.mat',AnimalName);
-   load(fileName,'centerPositions','targetChan');
+   load(fileName,'centerPositions','targetChan','trueCenter');
    cd(currentdirectory);
 end
 
@@ -144,7 +148,7 @@ if Day<5
     fileName = sprintf('RestrictSRPStimDay%d_%d.mat',Day,AnimalName);
     save(fileName,'centerPositions','targetChan','Radius','degreeRadius','spatFreq',...
         'mmPerPixel','DistToScreen','orientation','w_pixels','h_pixels','stimTime','holdTime',...
-        'numStimuli','phase','stimNum','Date','DayType')
+        'numStimuli','phase','stimNum','Date','DayType','degreeShift','trueCenter');
     % Close window
     Screen('CloseAll');
 
