@@ -70,13 +70,13 @@ conv_factor = 1/conv_factor;
 % perform unit conversions
 Radius = (tan((degreeRadius/2)*pi/180)*(DistToScreen*10*2))*conv_factor; % get number of pixels
      % that degreeRadius degrees of visual space will occupy
-    
-Shift = (tan((degreeShift/2)*pi/180)*(DistToScreen*10*2))*conv_factor;
      
 temp = (tan(((1/spatFreq)/2)*pi/180)*(DistToScreen*10*2))*conv_factor;
 newSpatFreq = 1/temp;
 
 if Day==1
+    ind = randperm(length(degreeShift),1);
+    Shift = (tan((degreeShift(ind)/2)*pi/180)*(DistToScreen*10*2))*conv_factor;
     [centerPositions,~] = GetRetinoMap(AnimalName);
     targetChan = 1;
     trueCenter = centerPositions;
@@ -84,7 +84,7 @@ if Day==1
 else
    cd('~/CloudStation/ByronExp/RestrictSRP');
    fileName = sprintf('RestrictSRPStimDay1_%d.mat',AnimalName);
-   load(fileName,'centerPositions','targetChan','trueCenter');
+   load(fileName,'centerPositions','targetChan','trueCenter','degreeShift');
    cd(currentdirectory);
 end
 
@@ -174,7 +174,7 @@ elseif Day == 5
     stimNum = zeros(numConditions*numStimuli,1);
     stimVals = [1,2;3,4;5,6;7,8];
     order = randperm(numConditions);
-    channel = zeros(numConditions,1);
+    screenPosition = zeros(numConditions,2);
     
     orientations = orientation.*ones(4*numStimuli,1);
     for ii=1:numConditions
@@ -182,14 +182,14 @@ elseif Day == 5
         stimNum(2+(ii-1)*numStimuli:2:numStimuli+(ii-1)*numStimuli) = stimVals(order(ii),2);
         
         if order(ii) == 1
-            channel(ii) = targetChan;
+            screenPosition(ii,:) = centerPositions(targetChan,:);
         elseif order(ii) == 2
-            channel(ii) = targetChan;
+            screenPosition(ii,:) = centerPositions(targetChan,:);
             orientations(1+(ii-1)*numStimuli:numStimuli+(ii-1)*numStimuli) = orientation+3*pi/4;
         elseif order(ii) == 3
-            channel(ii) = -targetChan+3;
+            screenPosition(ii,:) = trueCenter(targetChan,:);
         elseif order(ii) == 4
-            channel(ii) = -targetChan+3;
+            screenPosition(ii,:) = trueCenter(targetChan,:);
             orientations(1+(ii-1)*numStimuli:numStimuli+(ii-1)*numStimuli) = orientation+pi/4;
         end
     end
@@ -216,7 +216,7 @@ elseif Day == 5
                 Screen('DrawTexture', win,gratingTex, [],[],...
                     [],[],[],[Grey Grey Grey Grey],...
                     [], [],[White,Black,...
-                    Radius,centerPositions(channel(zz),1),centerPositions(channel(zz),2),...
+                    Radius,screenPosition(zz,1),screenPosition(zz,2),...
                     newSpatFreq,orientations(count),phase(count)]);
                 % Request stimulus onset
                 vbl = Screen('Flip',win,vbl-ifi/2+stimTime);
@@ -239,7 +239,8 @@ elseif Day == 5
     fileName = sprintf('RestrictSRPStimDay%d_%d.mat',Day,AnimalName);
     save(fileName,'centerPositions','targetChan','Radius','degreeRadius','spatFreq',...
         'mmPerPixel','DistToScreen','orientations','w_pixels','h_pixels','stimTime','holdTime',...
-        'numStimuli','phase','stimNum','Date','DayType','order','channel','numConditions')
+        'numStimuli','phase','stimNum','Date','DayType','order','screenPosition',...
+        'numConditions','trueCenter','degreeShift')
     % Close window
     Screen('CloseAll');
     
