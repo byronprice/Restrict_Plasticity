@@ -75,16 +75,42 @@ temp = (tan(((1/spatFreq)/2)*pi/180)*(DistToScreen*10*2))*conv_factor;
 newSpatFreq = 1/temp;
 
 if Day==1
-    ind = randperm(length(degreeShift),1);
-    Shift = (tan((degreeShift(ind)/2)*pi/180)*(DistToScreen*10*2))*conv_factor;
+    nameString = num2str(AnimalName);
+    load(sprintf('Condition_%s.mat',nameString(1:end-1)));
+    
+    lastVal = str2double(nameString(end));
+    ind = inds(lastVal);
+    degreeShift = degreeShift(ind);
+    
+    Shift = (tan((degreeShift/2)*pi/180)*(DistToScreen*10*2))*conv_factor;
     [centerPositions,~] = GetRetinoMap(AnimalName);
     targetChan = 1;
     trueCenter = centerPositions;
+    
     centerPositions(targetChan,2) = centerPositions(targetChan,2)+Shift;
+    
+    if centerPositions(targetChan,2)+Radius > h_pixels
+        fprintf('\nNot enough room on the screen\n\n');
+        
+        origCenter = trueCenter;
+        temp = origCenter(2)+Shift;
+        
+        shiftAngle = 0;
+        while temp+Radius>=h_pixels
+            
+            xChange = sin(shiftAngle)*Shift;
+            yChange = cos(shiftAngle)*Shift;
+            
+            temp = origCenter(2)+yChange;
+            
+            shiftAngle = shiftAngle+0.01;
+        end
+        centerPositions = [trueCenter(1)+xChange,trueCenter(2)+yChange];
+    end
 else
    cd('~/CloudStation/ByronExp/RestrictSRP');
    fileName = sprintf('RestrictSRPStimDay1_%d.mat',AnimalName);
-   load(fileName,'centerPositions','targetChan','trueCenter','degreeShift');
+   load(fileName,'centerPositions','targetChan','trueCenter','degreeShift','Shift');
    cd(currentdirectory);
 end
 
@@ -148,7 +174,8 @@ if Day<5
     fileName = sprintf('RestrictSRPStimDay%d_%d.mat',Day,AnimalName);
     save(fileName,'centerPositions','targetChan','Radius','degreeRadius','spatFreq',...
         'mmPerPixel','DistToScreen','orientation','w_pixels','h_pixels','stimTime','holdTime',...
-        'numStimuli','phase','stimNum','Date','DayType','degreeShift','trueCenter');
+        'numStimuli','phase','stimNum','Date','DayType','degreeShift',...
+        'trueCenter','Shift','conv_factor');
     % Close window
     Screen('CloseAll');
 
@@ -240,7 +267,7 @@ elseif Day == 5
     save(fileName,'centerPositions','targetChan','Radius','degreeRadius','spatFreq',...
         'mmPerPixel','DistToScreen','orientations','w_pixels','h_pixels','stimTime','holdTime',...
         'numStimuli','phase','stimNum','Date','DayType','order','screenPosition',...
-        'numConditions','trueCenter','degreeShift')
+        'numConditions','trueCenter','degreeShift','Shift','conv_factor')
     % Close window
     Screen('CloseAll');
     
