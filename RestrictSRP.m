@@ -14,7 +14,7 @@ function [] = RestrictSRP(AnimalName,Day)
 % Updated: 2017/08/08
 %  By: Byron Price
 
-cd('~/CloudStation/ByronExp/RestrictSRP');
+cd('~/CloudStation/ByronExp/RestrictSRP_Final');
 load('RestrictSRPVars.mat');
 
 currentdirectory = '~/Documents/MATLAB/Byron/Retinotopic-Mapping';
@@ -92,8 +92,7 @@ if Day==1
     if centerPositions(targetChan,2)+Radius > h_pixels
         fprintf('\nNot enough room on the screen\n\n');
         
-        origCenter = trueCenter;
-        temp = origCenter(2)+Shift;
+        temp = trueCenter(2)+Shift;
         
         shiftAngle = 0;
         while temp+Radius>=h_pixels
@@ -101,9 +100,9 @@ if Day==1
             xChange = sin(shiftAngle)*Shift;
             yChange = cos(shiftAngle)*Shift;
             
-            temp = origCenter(2)+yChange;
+            temp = trueCenter(2)+yChange;
             
-            shiftAngle = shiftAngle+0.01;
+            shiftAngle = shiftAngle-0.01;
         end
         centerPositions = [trueCenter(1)+xChange,trueCenter(2)+yChange];
     end
@@ -221,6 +220,20 @@ elseif Day == 5
         end
     end
     
+    if degreeShift==0
+        % ten degree shift for novel on day 5
+        tempShift = (tan((10/2)*pi/180)*(DistToScreen*10*2))*conv_factor;
+        for ii=1:numConditions
+            if order(ii) == 3
+                screenPosition(ii,:) = trueCenter(targetChan,:);
+                screenPosition(ii,2) = screenPosition(ii,2)+tempShift;
+            elseif order(ii) == 4
+                screenPosition(ii,:) = trueCenter(targetChan,:);
+                screenPosition(ii,2) = screenPosition(ii,2)+tempShift;
+            end
+        end
+        
+    end
     
     Screen('BlendFunction',win,GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
     
