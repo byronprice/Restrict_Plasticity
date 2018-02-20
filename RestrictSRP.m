@@ -14,7 +14,7 @@ function [] = RestrictSRP(AnimalName,Day)
 % Updated: 2017/08/08
 %  By: Byron Price
 
-cd('~/CloudStation/ByronExp/RestrictSRP');
+cd('~/CloudStation/ByronExp/RestrictSRP_Final');
 load('RestrictSRPVars.mat');
 
 currentdirectory = '~/Documents/MATLAB/Byron/Retinotopic-Mapping';
@@ -75,6 +75,7 @@ temp = (tan(((1/spatFreq)/2)*pi/180)*(DistToScreen*10*2))*conv_factor;
 newSpatFreq = 1/temp;
 
 if Day==1
+    cd('~/CloudStation/ByronExp/RestrictSRP_Final');
     nameString = num2str(AnimalName);
     load(sprintf('Condition_%s.mat',nameString(1:end-1)));
     
@@ -108,7 +109,7 @@ if Day==1
         centerPositions = [trueCenter(1)+xChange,trueCenter(2)+yChange];
     end
 else
-   cd('~/CloudStation/ByronExp/RestrictSRP');
+   cd('~/CloudStation/ByronExp/RestrictSRP_Final');
    fileName = sprintf('RestrictSRPStimDay1_%d.mat',AnimalName);
    load(fileName,'centerPositions','targetChan','trueCenter','degreeShift','Shift');
    cd(currentdirectory);
@@ -169,7 +170,7 @@ if Day<5
     usb.stopRecording;
     Priority(0);
     
-    cd('~/CloudStation/ByronExp/RestrictSRP');
+    cd('~/CloudStation/ByronExp/RestrictSRP_Final');
     DayType = 'train';
     fileName = sprintf('RestrictSRPStimDay%d_%d.mat',Day,AnimalName);
     save(fileName,'centerPositions','targetChan','Radius','degreeRadius','spatFreq',...
@@ -261,7 +262,7 @@ elseif Day == 5
     usb.stopRecording;
     Priority(0);
     
-    cd('~/CloudStation/ByronExp/RestrictSRP');
+    cd('~/CloudStation/ByronExp/RestrictSRP_Final');
     DayType = 'test';
     fileName = sprintf('RestrictSRPStimDay%d_%d.mat',Day,AnimalName);
     save(fileName,'centerPositions','targetChan','Radius','degreeRadius','spatFreq',...
@@ -347,5 +348,5 @@ end
 
 [~,targetChan] = max(bestChan);
 
-cd ~/CloudStation/ByronExp/RestrictSRP/
+cd ~/CloudStation/ByronExp/RestrictSRP_Final/
 end
