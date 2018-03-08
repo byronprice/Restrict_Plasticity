@@ -16,7 +16,7 @@ function [] = RestrictTPL(AnimalName,Day)
 %           CloudStation
 % Created: 2017/08/14 at 24 Cummington, Boston
 %  Byron Price
-% Updated: 2017/09/25
+% Updated: 2018/03/08
 %  By: Byron Price
 
 cd('~/CloudStation/ByronExp/RestrictTPL');
