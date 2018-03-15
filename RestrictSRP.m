@@ -1,4 +1,4 @@
-function [] = RestrictSRP(AnimalName,Day)
+c function [] = RestrictSRP(AnimalName,Day)
 %RestrictSRP.m
 %  Run SRP within a restricted region surrounding the LFP retinotopic response
 %    region.
@@ -17,7 +17,7 @@ function [] = RestrictSRP(AnimalName,Day)
 cd('~/CloudStation/ByronExp/RestrictSRP_Final');
 load('RestrictSRPVars.mat');
 
-currentdirectory = '~/Documents/MATLAB/Byron/Retinotopic-Mapping';
+directory = '~/Documents/MATLAB/Byron/Sequence-Learning';
 cd(currentdirectory);
 
 reps = numStimuli/blocks;
@@ -56,8 +56,8 @@ Screen('ColorRange', win, 1);
 % Retrieve monitor refresh duration
 ifi = Screen('GetFlipInterval', win);
 
-dgshader = [currentdirectory '/Retinotopy.vert.txt'];
-GratingShader = LoadGLSLProgramFromFiles({ dgshader, [currentdirectory '/Retinotopy.frag.txt'] }, 1);
+dgshader = [currentdirectory '/SequenceStim.vert.txt'];
+GratingShader = LoadGLSLProgramFromFiles({ dgshader, [currentdirectory '/SequenceStim.frag.txt'] }, 1);
 gratingTex = Screen('SetOpenGLTexture', win, [], 0, GL.TEXTURE_3D,w_pixels,...
     h_pixels, 1, GratingShader);
 
