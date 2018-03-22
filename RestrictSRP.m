@@ -1,4 +1,4 @@
-c function [] = RestrictSRP(AnimalName,Day)
+function [] = RestrictSRP(AnimalName,Day)
 %RestrictSRP.m
 %  Run SRP within a restricted region surrounding the LFP retinotopic response
 %    region.
@@ -11,13 +11,13 @@ c function [] = RestrictSRP(AnimalName,Day)
 %           CloudStation
 % Created: 2017/08/08 at 24 Cummington, Boston
 %  Byron Price
-% Updated: 2017/08/08
+% Updated: 2018/03/22
 %  By: Byron Price
 
-cd('~/CloudStation/ByronExp/RestrictSRP_Final');
+cd('~/CloudStation/ByronExp/RestrictSRP3.0');
 load('RestrictSRPVars.mat');
 
-directory = '~/Documents/MATLAB/Byron/Sequence-Learning';
+currentdirectory = '~/Documents/MATLAB/Byron/Sequence-Learning';
 cd(currentdirectory);
 
 reps = numStimuli/blocks;
@@ -68,49 +68,51 @@ mmPerPixel = conv_factor;
 conv_factor = 1/conv_factor;
 
 % perform unit conversions
-Radius = (tan((degreeRadius/2)*pi/180)*(DistToScreen*10*2))*conv_factor; % get number of pixels
-     % that degreeRadius degrees of visual space will occupy
-     
-temp = (tan(((1/spatFreq)/2)*pi/180)*(DistToScreen*10*2))*conv_factor;
-newSpatFreq = 1/temp;
+Radius = degreeRadius*pi/180;
+newSpatFreq = spatFreq*180/pi;
+screenDist = DistToScreen*10/mmPerPixel;
+centerVals = [w_pixels/2,90/mmPerPixel];
 
 if Day==1
-    cd('~/CloudStation/ByronExp/RestrictSRP_Final');
+    cd('~/CloudStation/ByronExp/RestrictSRP3.0');
     nameString = num2str(AnimalName);
     load(sprintf('Condition_%s.mat',nameString(1:end-1)));
     
     lastVal = str2double(nameString(end));
     ind = inds(lastVal);
-    degreeShift = degreeShift(ind);
+    radianShift = degreeShift(ind)*pi/180;
     
-    Shift = (tan((degreeShift/2)*pi/180)*(DistToScreen*10*2))*conv_factor;
     [centerPositions,~] = GetRetinoMap(AnimalName);
     targetChan = 1;
+    
+    x = centerPositions(targetChan,1);y = centerPositions(targetChan,2);
+    centerPositions(targetChan,1) = pi/2-acos(y/sqrt(screenDist*screenDist+x*x+y*y));
+    centerPositions(targetChan,2) = atan(x/screenDist);
     trueCenter = centerPositions;
     
-    centerPositions(targetChan,2) = centerPositions(targetChan,2)+Shift;
+    centerPositions(targetChan,2) = centerPositions(targetChan,2)+radianShift;
     
-    if centerPositions(targetChan,2)+Radius > h_pixels
-        fprintf('\nNot enough room on the screen\n\n');
-        
-        temp = trueCenter(2)+Shift;
-        
-        shiftAngle = 0;
-        while temp+Radius>=h_pixels
-            
-            xChange = sin(shiftAngle)*Shift;
-            yChange = cos(shiftAngle)*Shift;
-            
-            temp = trueCenter(2)+yChange;
-            
-            shiftAngle = shiftAngle-0.01;
-        end
-        centerPositions = [trueCenter(1)+xChange,trueCenter(2)+yChange];
-    end
+%     if centerPositions(targetChan,2)+Radius > h_pixels
+%         fprintf('\nNot enough room on the screen\n\n');
+%         
+%         temp = trueCenter(2)+Shift;
+%         
+%         shiftAngle = 0;
+%         while temp+Radius>=h_pixels
+%             
+%             xChange = sin(shiftAngle)*Shift;
+%             yChange = cos(shiftAngle)*Shift;
+%             
+%             temp = trueCenter(2)+yChange;
+%             
+%             shiftAngle = shiftAngle-0.01;
+%         end
+%         centerPositions = [trueCenter(1)+xChange,trueCenter(2)+yChange];
+%     end
 else
-   cd('~/CloudStation/ByronExp/RestrictSRP_Final');
+   cd('~/CloudStation/ByronExp/RestrictSRP3.0');
    fileName = sprintf('RestrictSRPStimDay1_%d.mat',AnimalName);
-   load(fileName,'centerPositions','targetChan','trueCenter','degreeShift','Shift');
+   load(fileName,'centerPositions','targetChan','trueCenter','degreeShift','radianShift');
    cd(currentdirectory);
 end
 
@@ -151,9 +153,10 @@ if Day<5
             
             % Draw the procedural texture as any other texture via 'DrawTexture'
             Screen('DrawTexture', win,gratingTex, [],[],...
-                [],[],[],[Grey Grey Grey Grey],...
-                [], [],[White,Black,...
-                Radius,centerPositions(targetChan,1),centerPositions(targetChan,2),newSpatFreq,orientation,phase(count)]);
+                    [],[],[],[Grey Grey Grey Grey],...
+                    [], [],[White,Black,...
+                    Radius,centerVals(1),centerVals(2),newSpatFreq,orientation,...
+                    phase(count),screenDist,centerPositions(targetChan,1),centerPositions(targetChan,2),0]);
             % Request stimulus onset
             vbl = Screen('Flip',win,vbl-ifi/2+stimTime);
             usb.strobeEventWord(stimNum(count));
@@ -175,7 +178,7 @@ if Day<5
     save(fileName,'centerPositions','targetChan','Radius','degreeRadius','spatFreq',...
         'mmPerPixel','DistToScreen','orientation','w_pixels','h_pixels','stimTime','holdTime',...
         'numStimuli','phase','stimNum','Date','DayType','degreeShift',...
-        'trueCenter','Shift','conv_factor');
+        'trueCenter','radianShift','conv_factor');
     % Close window
     Screen('CloseAll');
 
@@ -223,7 +226,7 @@ elseif Day == 5
     
     if degreeShift==0
         % ten degree shift for novel on day 5
-        tempShift = (tan((10/2)*pi/180)*(DistToScreen*10*2))*conv_factor;
+        tempShift = 10*pi/180;
         for ii=1:numConditions
             if order(ii) == 3
                 screenPosition(ii,:) = trueCenter(targetChan,:);
@@ -257,8 +260,8 @@ elseif Day == 5
                 Screen('DrawTexture', win,gratingTex, [],[],...
                     [],[],[],[Grey Grey Grey Grey],...
                     [], [],[White,Black,...
-                    Radius,screenPosition(zz,1),screenPosition(zz,2),...
-                    newSpatFreq,orientations(count),phase(count)]);
+                    Radius,centerVals(1),centerVals(2),newSpatFreq,orientations(count),...
+                    phase(count),screenDist,screenPosition(zz,1),screenPosition(zz,2),0]);
                 % Request stimulus onset
                 vbl = Screen('Flip',win,vbl-ifi/2+stimTime);
                 usb.strobeEventWord(stimNum(count));
@@ -281,7 +284,7 @@ elseif Day == 5
     save(fileName,'centerPositions','targetChan','Radius','degreeRadius','spatFreq',...
         'mmPerPixel','DistToScreen','orientations','w_pixels','h_pixels','stimTime','holdTime',...
         'numStimuli','phase','stimNum','Date','DayType','order','screenPosition',...
-        'numConditions','trueCenter','degreeShift','Shift','conv_factor')
+        'numConditions','trueCenter','degreeShift','radianShift','conv_factor')
     % Close window
     Screen('CloseAll');
     
