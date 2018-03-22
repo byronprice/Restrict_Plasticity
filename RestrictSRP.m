@@ -172,7 +172,7 @@ if Day<5
     usb.stopRecording;
     Priority(0);
     
-    cd('~/CloudStation/ByronExp/RestrictSRP_Final');
+    cd('~/CloudStation/ByronExp/RestrictSRP3.0');
     DayType = 'train';
     fileName = sprintf('RestrictSRPStimDay%d_%d.mat',Day,AnimalName);
     save(fileName,'centerPositions','targetChan','Radius','degreeRadius','spatFreq',...
@@ -278,7 +278,7 @@ elseif Day == 5
     usb.stopRecording;
     Priority(0);
     
-    cd('~/CloudStation/ByronExp/RestrictSRP_Final');
+    cd('~/CloudStation/ByronExp/RestrictSRP3.0');
     DayType = 'test';
     fileName = sprintf('RestrictSRPStimDay%d_%d.mat',Day,AnimalName);
     save(fileName,'centerPositions','targetChan','Radius','degreeRadius','spatFreq',...
