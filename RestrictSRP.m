@@ -90,7 +90,7 @@ if Day==1
     centerPositions(targetChan,2) = atan(x/screenDist);
     trueCenter = centerPositions;
     
-    centerPositions(targetChan,2) = centerPositions(targetChan,2)+radianShift;
+    centerPositions(targetChan,1) = centerPositions(targetChan,1)+radianShift;
     
 %     if centerPositions(targetChan,2)+Radius > h_pixels
 %         fprintf('\nNot enough room on the screen\n\n');
@@ -364,5 +364,5 @@ end
 
 [~,targetChan] = max(bestChan);
 
-cd ~/CloudStation/ByronExp/RestrictSRP_Final/
+cd ~/CloudStation/ByronExp/RestrictSRP3.0/
 end
