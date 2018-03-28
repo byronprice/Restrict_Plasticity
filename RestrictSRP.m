@@ -85,6 +85,8 @@ if Day==1
     [centerPositions,~] = GetRetinoMap(AnimalName);
     targetChan = 1;
     
+    centerPositions(targetChan,:) = centerPositions(targetChan,:)-centerVals;
+    
     x = centerPositions(targetChan,1);y = centerPositions(targetChan,2);
     centerPositions(targetChan,1) = pi/2-acos(y/sqrt(screenDist*screenDist+x*x+y*y));
     centerPositions(targetChan,2) = atan(x/screenDist);
