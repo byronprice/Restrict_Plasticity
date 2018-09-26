@@ -71,7 +71,7 @@ conv_factor = 1/conv_factor;
 Radius = degreeRadius*pi/180;
 newSpatFreq = spatFreq*180/pi;
 screenDist = DistToScreen*10/mmPerPixel;
-centerVals = [w_pixels/2,90/mmPerPixel];
+centerVals = [w_pixels/2,80/mmPerPixel];
 
 if Day==1
     cd('~/CloudStation/ByronExp/RestrictSRP3.0');
