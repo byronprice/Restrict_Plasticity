@@ -27,8 +27,8 @@ N = 1e5;
 dataRange = linspace(min(minimumP,minimumQ),max(maximumP,maximumQ),N);
 
 % get empirical CDF's
-[P,xp] = GetECDF(P_data);
-[Q,xq] = GetECDF(Q_data);
+[P,xp] = ecdf(P_data);
+[Q,xq] = ecdf(Q_data);
 
 % convert to piecewise linear continuous distributions
 P_continuous = zeros(N,1);
